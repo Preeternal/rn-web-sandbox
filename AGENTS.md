@@ -1,4 +1,4 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+This is an Expo/React Native application targeting web browsers, including small mobile screens. Prioritize responsive mobile-first layouts, usability across desktop and mobile browsers, performance, and cross-platform compatibility.
 
 ## Expo has changed — do not trust your training data
 
@@ -8,33 +8,47 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
 3. For anything else, fetch <https://docs.expo.dev/llms.txt> — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
 
+## Dependency Management
+
+- All dependencies are installed, updated, and removed exclusively by the user.
+- Never run package installation, update, or removal commands without explicit user approval.
+- If a dependency is missing or required, explain why it is needed and provide the exact installation command. Wait for the user to install it.
+- Use `yarn expo install <package>` for Expo SDK-dependent packages.
+- Use `yarn add <package>` for regular JavaScript dependencies.
+- Use `yarn add -D <package>` for development dependencies.
+- Never modify `package.json`, `yarn.lock`, or `.yarnrc.yml` without explicit user approval.
+
 ## Commands
 
 ```bash
-yarn expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-yarn expo start              # start the dev server
+yarn expo start --web       # start the dev server
 yarn expo export --platform web  # build static web output
 yarn expo lint               # lint
 yarn tsc --noEmit            # typecheck
 yarn expo-doctor             # diagnose dependency and config issues
-yarn expo install --fix      # fix incompatible package versions
+yarn vitest run              # run tests
 ```
 
 Run lint and typecheck before declaring any task done.
 
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
+- Use **Expo Router** for navigation. Routes and layouts live in `src/app/`. Keep reusable components, hooks, services, and utilities outside `src/app/`.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: <https://docs.expo.dev/router/introduction.md>
 
-## Building with EAS
+## Deployment
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `yarn dlx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: <https://docs.expo.dev/eas/index.md>
+GitHub Pages deployment has been configured and verified.
+
+Never commit, push, rebase, reset, force-push, deploy, publish,
+or trigger GitHub Actions without explicit user approval.
+
+Deployment is exclusively controlled by the user.
+The user personally handles all deployments.
 
 ## Rules
 
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `yarn expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: <https://docs.expo.dev/versions/latest/index.md>
+- When asked for advice, review, or recommendations, respond with suggestions only. Do not edit files.
