@@ -49,6 +49,9 @@ beforeEach(async () => {
   activeLocks = new Set();
   vi.stubGlobal('navigator', { locks: {
     request: async <TData>(name: string, options: LockOptions, callback: (lock: Lock | null) => Promise<TData>) => {
+      if (options.ifAvailable && options.signal !== undefined) {
+        throw new DOMException('ifAvailable and signal cannot be used together', 'NotSupportedError');
+      }
       if (options.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
       if (activeLocks.has(name)) return callback(null);
       activeLocks.add(name);

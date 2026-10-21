@@ -39,7 +39,10 @@ beforeEach(async () => {
   } });
   const locks = new Set<string>();
   vi.stubGlobal('navigator', { locks: {
-    request: async <TData>(name: string, _options: LockOptions, callback: (lock: Lock | null) => Promise<TData>) => {
+    request: async <TData>(name: string, options: LockOptions, callback: (lock: Lock | null) => Promise<TData>) => {
+      if (options.ifAvailable && options.signal !== undefined) {
+        throw new DOMException('ifAvailable and signal cannot be used together', 'NotSupportedError');
+      }
       if (locks.has(name)) return callback(null);
       locks.add(name);
       try { return await callback({ name, mode: 'exclusive' }); } finally { locks.delete(name); }
@@ -51,6 +54,24 @@ beforeEach(async () => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('persisted Claim intent and recovery', () => {
+  it('submits with a session signal using browser-compatible lock options', async () => {
+    const controller = new AbortController();
+    const send = vi.fn().mockResolvedValue(pending);
+    const result = await executeClaimOperation(key, initial(), send, vi.fn(), controller.signal);
+    expect(result.claim).toEqual(pending);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not persist or send a claim for an already ended session', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const send = vi.fn();
+    await expect(executeClaimOperation(key, initial(), send, vi.fn(), controller.signal))
+      .rejects.toMatchObject({ code: 'ERR_CANCELED' });
+    expect(send).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
   it('persists the exact amount and key before the first POST', async () => {
     const send = vi.fn(async () => {
       expect(readClaimOperation(key)?.payload.amount).toBe('0.50');
@@ -84,13 +105,14 @@ describe('persisted Claim intent and recovery', () => {
   });
 
   it('blocks a second submission while another sender holds the browser lock', async () => {
+    const controller = new AbortController();
     let finish!: (claim: TClaim) => void;
     let started!: () => void;
     const ready = new Promise<void>((resolve) => { started = resolve; });
     const send = vi.fn(() => new Promise<TClaim>((resolve) => { finish = resolve; started(); }));
-    const first = executeClaimOperation(key, initial(), send, vi.fn());
+    const first = executeClaimOperation(key, initial(), send, vi.fn(), controller.signal);
     await ready;
-    await expect(executeClaimOperation(key, initial(), send, vi.fn())).rejects.toThrow('Another tab');
+    await expect(executeClaimOperation(key, initial(), send, vi.fn(), controller.signal)).rejects.toThrow('Another tab');
     finish(pending);
     await first;
     expect(send).toHaveBeenCalledTimes(1);

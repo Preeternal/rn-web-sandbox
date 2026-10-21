@@ -68,7 +68,8 @@ async function withClaimLock<TData>(key: string, action: () => Promise<TData>, s
   if (typeof navigator === 'undefined' || !navigator.locks) {
     throw new Error('Safe claim submission requires a browser with Web Locks support and HTTPS or localhost.');
   }
-  return navigator.locks.request(key, { ifAvailable: true, signal }, async (lock) => {
+  // Non-queued requests cannot use the Web Locks signal option; cancel the action itself.
+  return navigator.locks.request(key, { ifAvailable: true }, async (lock) => {
     if (!lock) throw new Error('Another tab is updating this claim. Wait for it to finish.');
     if (signal?.aborted) throw new CanceledError('The claim session has ended.');
     return action();
