@@ -9,3 +9,17 @@ export type TCreateClaimVariables = {
   payload: TCreateClaimRequest;
   idempotencyKey: string;
 };
+
+export type TClaimAmountErrorCode =
+  | 'REQUIRED'
+  | 'INVALID_FORMAT'
+  | 'NOT_POSITIVE'
+  | 'EXCESS_PRECISION'
+  | 'BELOW_MINIMUM'
+  | 'ABOVE_AVAILABLE'
+  | 'FEE_EXCEEDS_AMOUNT'
+  | 'ASSET_MISMATCH';
+
+export type TClaimAmountValidation =
+  | { valid: false; code: TClaimAmountErrorCode; message: string }
+  | { valid: true; amount: string; fee: string; receiveAmount: string };
