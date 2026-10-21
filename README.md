@@ -1,103 +1,51 @@
 # React Native Web Sandbox
 
-## Expo Configuration
+Payback balances and claims, built with Expo, React Native, TypeScript and Expo Router for mobile and desktop browsers.
 
-Expo SDK 58 with Expo Router and static web output.
+## Live app
 
-The following settings are already configured in app.json:
+[Open the app](https://preeternal.github.io/rn-web-sandbox/)
 
-- web.output: "static"
-- experiments.baseUrl: "/rn-web-sandbox"
+Enter your API token on first open. The app validates it before saving it in browser storage. Use **Logout** to enter a different token. Tokens are supplied at runtime and are not included in the build.
 
-## Screens
+## Run locally
 
-- Home (`/`): a protected placeholder with a Logout action.
-- Auth (`/auth`): enter and save a token to open Home.
-
-Routes are relative to the configured base path. A `401` from the current API
-session clears the token and returns to Auth. Tokens are saved in browser storage.
-
-## Install dependencies
+Use Node.js 22 and Yarn 4.18.1 (the version pinned in `package.json`).
 
 ```bash
-yarn install
+corepack enable
+yarn install --immutable
+cp .env.example .env.local
 ```
 
-## Start the app
-
-Copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_BASE_URL` to your API URL.
-Local environment files are ignored by Git. The URL is included in the web build;
-never put API tokens in environment variables used by the client.
-For CI builds, set `EXPO_PUBLIC_BASE_URL` in the build environment before running
-`yarn expo export --platform web`.
+Set `EXPO_PUBLIC_BASE_URL` in `.env.local` to the API base URL provided with the task, then start the app:
 
 ```bash
 yarn expo start --web
 ```
 
-## Other commands
+Open [http://localhost:8081/](http://localhost:8081/) or the address printed by Expo. Development runs at `/`; `/rn-web-sandbox/` is the deployed build's base path. Enter the token in the app, not in the environment file.
 
-```bash
-yarn expo install <package>  # Expo SDK-dependent packages
-yarn add <package>           # Regular JavaScript dependencies
-yarn add -D <package>        # Development dependencies
-yarn expo install --fix      # fix incompatible package versions
-```
+Claim submission requires browser support for Web Crypto and Web Locks, over HTTPS or localhost.
 
-## Build
-
-Run from the project root:
-
-```bash
-yarn expo export --platform web
-```
-
-The static website is generated in dist/.
-
-## Local Production Preview
-
-IMPORTANT: Do not use `npx serve dist` directly.
-
-GitHub Pages serves this repository under /rn-web-sandbox/,
-so the local server must reproduce that directory structure.
-
-Run from the project root:
-
-```bash
-mkdir -p /tmp/expo-pages-test
-ln -sfn "$PWD/dist" /tmp/expo-pages-test/rn-web-sandbox
-yarn dlx serve /tmp/expo-pages-test
-```
-
-Open:
-
-<http://localhost:3000/rn-web-sandbox/>
-
-## Deployment
-
-GitHub Pages is the configured deployment target.
-
-Use GitHub Actions to build and deploy the contents of dist/.
-
-Do not commit dist/ to the main branch.
-
-GitHub Pages deployment has been configured and verified.
-
-```bash
-yarn install --immutable
-yarn expo export --platform web
-```
-
-Repository: Preeternal/rn-web-sandbox
-
-Production URL:
-
-<https://preeternal.github.io/rn-web-sandbox/>
-
-### Tests
-
-Run tests:
+Validation and build commands:
 
 ```bash
 yarn vitest run
+yarn expo lint
+yarn tsc --noEmit
+yarn expo export --platform web
 ```
+
+The static build is generated in `dist/`, with `/rn-web-sandbox/` configured for GitHub Pages. The API base URL must also be set in the build environment.
+
+## What works
+
+- **Authentication:** token validation, browser persistence, Logout and session isolation. An API `401` from the current session returns to the login screen.
+- **Balances (Home):** available, pending and claiming amounts per asset, their combined USD estimate, server snapshot freshness, loading and empty states, retry and manual refresh. Balances refresh every 30 seconds and remain fresh in the query cache for 5 seconds.
+- **Claim:** asset and destination selection, amount entry, Max, input validation, fee and receive amount preview, confirmation, and status tracking until completion or failure.
+- **Recovery:** the exact request body and idempotency key are saved before submission. Unknown outcomes can be recovered after a timeout, reload or another login with the same token. Cross-tab locking prevents concurrent submissions; one unresolved operation is allowed per token.
+- **Balance reconciliation:** the server snapshot stays visible alongside the operation status. A new Claim becomes available after the previous operation is resolved and a newer balance snapshot is received.
+- **Money correctness:** decimal strings and `big.js` preserve precision. Zod validates request and response contracts, including `amount = fee + receiveAmount`. Tests cover amount rules, totals, API contracts, session changes and Claim recovery.
+
+Activity history is not implemented. Automated tests use API fixtures; live API and phone-browser verification are manual. See [NOTES.md](NOTES.md) for decisions, AI collaboration and known limitations.
