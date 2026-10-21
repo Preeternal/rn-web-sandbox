@@ -18,6 +18,21 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 - Use `yarn add -D <package>` for development dependencies.
 - Never modify `package.json`, `yarn.lock`, or `.yarnrc.yml` without explicit user approval.
 
+## TypeScript Naming
+
+- Prefix every locally declared type alias and interface with `T`, for example `TSession` or `TTokenScreenProps`.
+- Keep the original names of types imported from third-party libraries.
+
+## TypeScript Type Organization
+
+- Keep shared or reused project-defined type aliases and interfaces under two branches: `src/types/entities/` and `src/types/features/`.
+- Put reusable entity/data models in `src/types/entities/<entity>.ts`, for example `src/types/entities/session.ts`.
+- Put shared or reused feature-specific contracts, component props, hook types, API request/response types, and other technical types in `src/types/features/<feature>.ts`.
+- A type alias or interface may be declared locally in an implementation file if it is used exactly once, only within that file, and is not exported or shared. Keep the `T` prefix for these local types too.
+- Move a local type to the appropriate `entities/` or `features/` file when it becomes reused or shared. Do not introduce adjacent `types.ts` files or type files directly under `src/types/`.
+- Use kebab-case filenames and explicit `import type` / `export type`. Import directly from the owning file instead of introducing a global barrel of unrelated types.
+- Keep runtime schemas and logic outside type-only files. Derive types from Zod schemas instead of manually duplicating the same contract.
+
 ## Commands
 
 ```bash

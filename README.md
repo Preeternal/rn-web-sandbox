@@ -9,6 +9,14 @@ The following settings are already configured in app.json:
 - web.output: "static"
 - experiments.baseUrl: "/rn-web-sandbox"
 
+## Screens
+
+- Home (`/`): a protected placeholder with a Logout action.
+- Auth (`/auth`): enter and save a token to open Home.
+
+Routes are relative to the configured base path. A `401` from the current API
+session clears the token and returns to Auth. Tokens are saved in browser storage.
+
 ## Install dependencies
 
 ```bash
@@ -16,6 +24,12 @@ yarn install
 ```
 
 ## Start the app
+
+Copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_BASE_URL` to your API URL.
+Local environment files are ignored by Git. The URL is included in the web build;
+never put API tokens in environment variables used by the client.
+For CI builds, set `EXPO_PUBLIC_BASE_URL` in the build environment before running
+`yarn expo export --platform web`.
 
 ```bash
 yarn expo start --web

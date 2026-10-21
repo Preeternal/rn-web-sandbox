@@ -1,26 +1,49 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useColorScheme } from "react-native";
+import { setupAxios } from '@/api/axios';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { restoreSession } from '@/features/auth/session';
+import { SessionQueries } from '@/features/auth/session-queries';
+import { useSession } from '@/features/auth/use-session';
 
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
-import AppTabs from "@/components/app-tabs";
-import QueryDevtools from "@/components/query-devtools";
-
-SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient();
-
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const session = useSession();
+
+  useEffect(() => {
+    const dispose = setupAxios();
+    restoreSession();
+    return dispose;
+  }, []);
+
+  if (!session.ready) {
+    return (
+      <ThemedView style={styles.loading}>
+        <ActivityIndicator accessibilityLabel="Loading session" />
+        <ThemedText>Loading session…</ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <AppTabs />
-      </ThemeProvider>
-      {__DEV__ && <QueryDevtools />}
-    </QueryClientProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SessionQueries key={session.version}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={!!session.token}>
+            <Stack.Screen name="index" options={{ title: 'Home' }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!session.token}>
+            <Stack.Screen name="auth" options={{ title: 'Auth' }} />
+          </Stack.Protected>
+        </Stack>
+      </SessionQueries>
+    </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+});
