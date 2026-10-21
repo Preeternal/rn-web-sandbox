@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import { StyleSheet, View, Pressable } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -30,6 +31,11 @@ export function BalanceCard({ balance }: TBalanceCardProps) {
         <ThemedText type="small" themeColor="textSecondary">Claiming</ThemedText>
         <ThemedText selectable type="smallBold" style={styles.rowAmount}>{balance.claiming} {balance.asset}</ThemedText>
       </View>
+      <Link href={{ pathname: '/claim', params: { asset: balance.asset } }} asChild>
+        <Pressable accessibilityRole="link" style={styles.claimLink}>
+          <ThemedText type="smallBold">Claim {balance.asset}</ThemedText>
+        </Pressable>
+      </Link>
     </ThemedView>
   );
 }
@@ -42,4 +48,5 @@ const styles = StyleSheet.create({
   amount: { fontSize: 24, lineHeight: 32, fontWeight: '600', fontVariant: ['tabular-nums'] },
   row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 },
   rowAmount: { flexShrink: 1, fontVariant: ['tabular-nums'] },
+  claimLink: { minHeight: 48, justifyContent: 'center' },
 });

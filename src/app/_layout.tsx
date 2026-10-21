@@ -35,6 +35,7 @@ export default function RootLayout() {
           <Stack.Protected guard={!!session.token}>
             <Stack.Screen name="index" options={{ title: 'Home' }} />
             <Stack.Screen name="balances" options={{ title: 'Balances' }} />
+            <Stack.Screen name="claim" options={{ title: 'Claim' }} />
           </Stack.Protected>
           <Stack.Protected guard={!session.token}>
             <Stack.Screen name="auth" options={{ title: 'Auth' }} />

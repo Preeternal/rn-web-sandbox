@@ -5,6 +5,7 @@ import { ApiError } from '@/api/errors';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { signOut } from '@/features/auth/session';
+import { ClaimNotice } from '@/features/claims/claim-notice';
 import { useBalancesQuery } from '@/hooks/api/balances/use-balances-query';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -39,6 +40,7 @@ export function BalancesScreen() {
             </Pressable>
           </View>
           {sessionError && <ThemedText accessibilityRole="alert">{sessionError}</ThemedText>}
+          <ClaimNotice />
 
           <View style={styles.refreshRow}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.refreshHint}>
