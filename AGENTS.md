@@ -52,6 +52,39 @@ Run lint and typecheck before declaring any task done.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: <https://docs.expo.dev/router/introduction.md>
 
+# Financial Arithmetic
+
+Use `big.js` (v7) for all financial calculations.
+
+- Never use JavaScript floating-point arithmetic for monetary values.
+- Parse API monetary values from decimal strings.
+- Use `Big` for balances, claim amounts, fees, and net amounts.
+- Preserve precision when converting values to and from the API.
+- Never use `parseFloat()` or `Number()` for financial calculations.
+- Validate positive amounts, available balances, and asset-specific decimal precision.
+- Do not assume rounding rules or fee formulas. Follow the API contract.
+
+Dependencies:
+
+- `big.js`
+- `@types/big.js`
+
+## Unit Testing
+
+Vitest v5 is installed for testing pure TypeScript business logic.
+
+- Keep financial calculations and validation independent of React Native components.
+- Test decimal precision, amount validation, maximum available amounts, and fee calculations.
+- Cover zero, negative, malformed, and excessive amounts.
+- Test rounding and decimal precision according to the API contract.
+- Do not introduce Jest unless React Native component testing becomes necessary.
+
+Run tests:
+
+```bash
+yarn vitest run
+```
+
 ## Deployment
 
 GitHub Pages deployment has been configured and verified.
