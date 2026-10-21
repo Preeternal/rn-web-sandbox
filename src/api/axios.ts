@@ -6,6 +6,9 @@ import { API_BASE_URL, API_TIMEOUT_MS } from './config';
 import type { TSessionRequestConfig } from '../types/features/api';
 
 function isApiRequest(config: InternalAxiosRequestConfig) {
+  if (!API_BASE_URL) {
+    throw new AxiosError('Configure EXPO_PUBLIC_BASE_URL before making API requests.', 'API_CONFIG', config);
+  }
   const url = new URL(config.url ?? '', config.baseURL ?? API_BASE_URL);
   return url.origin === new URL(API_BASE_URL).origin;
 }

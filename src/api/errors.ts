@@ -64,6 +64,9 @@ export function normalizeApiError(error: unknown): ApiError {
     });
   }
 
+  if (error.code === 'API_CONFIG') {
+    return new ApiError({ code: 'API_CONFIG', message: 'Configure EXPO_PUBLIC_BASE_URL before making API requests.' });
+  }
   if (error.code === 'AUTH_REQUIRED') {
     return new ApiError({ code: 'AUTH_REQUIRED', message: 'Enter an API token before making requests.' });
   }

@@ -4,3 +4,8 @@ import type { claimOptionsSchema, createClaimRequestSchema } from '../../api/cla
 
 export type TClaimOptions = z.infer<typeof claimOptionsSchema>;
 export type TCreateClaimRequest = z.infer<typeof createClaimRequestSchema>;
+
+export type TCreateClaimVariables = {
+  payload: TCreateClaimRequest;
+  idempotencyKey: string;
+};
