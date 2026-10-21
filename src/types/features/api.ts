@@ -1,6 +1,8 @@
-import type { InternalAxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 
-export type TSessionRequestConfig = InternalAxiosRequestConfig & {
+export type TApiRequestConfig = AxiosRequestConfig & { tokenValidation?: boolean };
+
+export type TSessionRequestConfig = InternalAxiosRequestConfig & Pick<TApiRequestConfig, 'tokenValidation'> & {
   authSessionVersion?: number;
 };
 

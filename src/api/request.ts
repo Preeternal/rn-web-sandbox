@@ -1,5 +1,7 @@
-import axios, { isCancel, type AxiosRequestConfig } from 'axios';
+import axios, { isCancel } from 'axios';
 import type { z } from 'zod';
+
+import type { TApiRequestConfig } from '../types/features/api';
 
 import { ApiError, normalizeApiError } from './errors';
 
@@ -17,7 +19,7 @@ export function validateRequest<TData>(schema: z.ZodType<TData>, value: unknown)
 }
 
 export async function requestApi<TData>(
-  config: AxiosRequestConfig,
+  config: TApiRequestConfig,
   schema: z.ZodType<TData>,
 ): Promise<TData> {
   try {

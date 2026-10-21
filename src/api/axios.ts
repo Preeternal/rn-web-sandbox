@@ -20,6 +20,8 @@ export function setupAxios() {
   const requestId = axios.interceptors.request.use(
     (config: TSessionRequestConfig) => {
       if (!isApiRequest(config)) return config;
+      // Validate a candidate without activating it or expiring an existing session on 401.
+      if (config.tokenValidation) return config;
       const session = getSession();
       if (!session.ready || !session.token || !session.signal) {
         throw new AxiosError('Enter an API token before making requests.', 'AUTH_REQUIRED', config);

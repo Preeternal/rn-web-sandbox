@@ -1,6 +1,6 @@
-import { saveToken } from '@/features/auth/session';
 import { TokenScreen } from '@/features/auth/token-screen';
 import { useSession } from '@/features/auth/use-session';
+import { verifyAndSaveToken } from '@/features/auth/verify-token';
 
 export default function AuthScreen() {
   const session = useSession();
@@ -9,7 +9,7 @@ export default function AuthScreen() {
     <TokenScreen
       key={session.version}
       notice={session.notice}
-      onSave={saveToken}
+      onSave={verifyAndSaveToken}
     />
   );
 }

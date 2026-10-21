@@ -19,7 +19,7 @@ function browserStorage(): Storage {
   return window.localStorage;
 }
 
-function updateSession(token: string | null, notice: string | null = null) {
+function updateSession(token: string | null, notice: string | null = null, initialBalances?: TSession['initialBalances']) {
   controller?.abort();
   controller = token ? new AbortController() : null;
   session = {
@@ -28,6 +28,7 @@ function updateSession(token: string | null, notice: string | null = null) {
     version: session.version + 1,
     notice,
     signal: controller?.signal ?? null,
+    initialBalances,
   };
   listeners.forEach((listener) => listener());
 }
@@ -58,7 +59,7 @@ export function restoreSession() {
   }
 }
 
-export function saveToken(input: string) {
+export function saveToken(input: string, initialBalances?: TSession['initialBalances']) {
   const token = input.trim();
   if (!token) throw new Error('Enter an API token.');
   try {
@@ -66,7 +67,7 @@ export function saveToken(input: string) {
   } catch {
     throw new Error('Could not save your token. Allow browser storage and try again.');
   }
-  updateSession(token);
+  updateSession(token, null, initialBalances);
 }
 
 export function signOut() {
