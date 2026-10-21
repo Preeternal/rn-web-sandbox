@@ -1,4 +1,5 @@
 import { Big } from 'big.js';
+import { CanceledError } from 'axios';
 
 import { ApiError } from '../../api/errors';
 import type { TClaim } from '../../types/entities/claim';
@@ -41,12 +42,35 @@ function writeClaimOperation(key: string, operation: TClaimOperation) {
   }
 }
 
-async function withClaimLock<TData>(key: string, action: () => Promise<TData>): Promise<TData> {
+function awaitClaimResult<TData>(result: Promise<TData>, signal?: AbortSignal): Promise<TData> {
+  if (!signal) return result;
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      signal.removeEventListener('abort', onAbort);
+      reject(new CanceledError('The claim session has ended. Recover the saved operation after signing in.'));
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    // Observe late settlement but never resume the cancelled operation's writes.
+    result.then((value) => {
+      signal.removeEventListener('abort', onAbort);
+      if (signal.aborted) onAbort();
+      else resolve(value);
+    }, (error: unknown) => {
+      signal.removeEventListener('abort', onAbort);
+      reject(error);
+    });
+    if (signal.aborted) onAbort();
+  });
+}
+
+async function withClaimLock<TData>(key: string, action: () => Promise<TData>, signal?: AbortSignal): Promise<TData> {
+  if (signal?.aborted) throw new CanceledError('The claim session has ended.');
   if (typeof navigator === 'undefined' || !navigator.locks) {
     throw new Error('Safe claim submission requires a browser with Web Locks support and HTTPS or localhost.');
   }
-  return navigator.locks.request(key, { ifAvailable: true }, async (lock) => {
+  return navigator.locks.request(key, { ifAvailable: true, signal }, async (lock) => {
     if (!lock) throw new Error('Another tab is updating this claim. Wait for it to finish.');
+    if (signal?.aborted) throw new CanceledError('The claim session has ended.');
     return action();
   });
 }
@@ -56,6 +80,7 @@ export async function executeClaimOperation(
   initial: TClaimOperation | null,
   send: TSendClaim,
   onChange: (operation: TClaimOperation) => void,
+  signal?: AbortSignal,
 ): Promise<TClaimOperation> {
   return withClaimLock(key, async () => {
     const saved = readClaimOperation(key);
@@ -73,7 +98,10 @@ export async function executeClaimOperation(
     writeClaimOperation(key, operation);
     onChange(operation);
     try {
-      const claim = await send({ payload: operation.payload, idempotencyKey: operation.idempotencyKey });
+      if (signal?.aborted) throw new CanceledError('The claim session has ended.');
+      // End the lock callback on logout even if the underlying transport never settles.
+      const claim = await awaitClaimResult(send({ payload: operation.payload, idempotencyKey: operation.idempotencyKey }), signal);
+      if (signal?.aborted) throw new CanceledError('The claim session has ended.');
       assertClaimMatches(operation, claim);
       const known = { ...operation, claim, errorMessage: null };
       writeClaimOperation(key, known);
@@ -89,7 +117,7 @@ export async function executeClaimOperation(
       onChange(updated);
       throw error;
     }
-  });
+  }, signal);
 }
 
 export async function recordClaimStatus(key: string, claim: TClaim): Promise<TClaimOperation> {

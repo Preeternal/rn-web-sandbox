@@ -71,11 +71,11 @@ export function useClaimFlow() {
       if (!storageKey || !isActiveSession(session.version)) throw new Error('Claim recovery is not ready.');
       await executeClaimOperation(storageKey, {
         ...submission, idempotencyKey: crypto.randomUUID(), claim: null, rejection: null, errorMessage: null,
-      }, mutation.mutateAsync, update);
+      }, mutation.mutateAsync, update, session.signal ?? undefined);
     }),
     recover: () => run(async () => {
       if (!storageKey) throw new Error('Claim recovery is not ready.');
-      await executeClaimOperation(storageKey, null, mutation.mutateAsync, update);
+      await executeClaimOperation(storageKey, null, mutation.mutateAsync, update, session.signal ?? undefined);
     }),
     finish: () => run(async () => {
       if (!storageKey) throw new Error('Claim recovery is not ready.');

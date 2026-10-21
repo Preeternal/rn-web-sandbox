@@ -14,6 +14,8 @@ export function createClaimMutationOptions(queryClient: QueryClient, version: nu
       version,
       () => createClaim(payload, idempotencyKey),
     ),
+    // An offline POST must fail or be cancelled, never wait in a reconnect queue.
+    networkMode: 'always',
     retry: false,
     onSuccess: (claim) => {
       if (!isActiveSession(version)) return;

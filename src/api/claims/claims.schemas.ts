@@ -1,3 +1,4 @@
+import { Big } from 'big.js';
 import { z } from 'zod';
 
 import { decimalStringSchema, identifierSchema, positiveDecimalStringSchema } from '../schemas';
@@ -33,4 +34,10 @@ export const claimSchema = z.object({
   failureReason: z.string().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+}).superRefine((claim, context) => {
+  // Format checks may already have failed without stopping refinements.
+  if ([claim.amount, claim.fee, claim.receiveAmount].some((value) => !decimalStringSchema.safeParse(value).success)) return;
+  if (!new Big(claim.amount).eq(new Big(claim.fee).plus(claim.receiveAmount))) {
+    context.addIssue({ code: 'custom', path: ['receiveAmount'], message: 'Claim amount must equal fee plus receive amount.' });
+  }
 });

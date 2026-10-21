@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { balancesResponseSchema } from './balances/balances.schemas';
-import { createClaimRequestSchema } from './claims/claims.schemas';
+import { claimSchema, createClaimRequestSchema } from './claims/claims.schemas';
 import { decimalStringSchema } from './schemas';
 
 describe('API decimal contracts', () => {
@@ -36,5 +36,30 @@ describe('API decimal contracts', () => {
 
   it('rejects invalid snapshot timestamps', () => {
     expect(balancesResponseSchema.safeParse({ asOf: 'yesterday', items: [] }).success).toBe(false);
+  });
+});
+
+describe('Claim response monetary consistency', () => {
+  const claim = {
+    id: 'clm_test', asset: 'ETH', destinationId: 'wallet', status: 'pending', failureReason: null,
+    createdAt: '2026-10-21T08:00:00.000Z', updatedAt: '2026-10-21T08:00:00.000Z',
+  };
+
+  it.each([
+    ['1', '0.1', '0.9'],
+    ['1.00', '0.10', '0.900'],
+    ['0.000000000000000002', '0.000000000000000001', '0.000000000000000001'],
+    ['9007199254740993.1', '0.01', '9007199254740993.09'],
+    ['0.1', '0.1', '0'],
+  ])('accepts exact equality for %s = %s + %s', (amount, fee, receiveAmount) => {
+    expect(claimSchema.safeParse({ ...claim, amount, fee, receiveAmount }).success).toBe(true);
+  });
+
+  it.each(['pending', 'completed', 'failed'])('rejects inconsistent money on a %s Claim', (status) => {
+    expect(claimSchema.safeParse({ ...claim, status, amount: '1', fee: '0.1', receiveAmount: '999' }).success).toBe(false);
+  });
+
+  it.each(['amount', 'fee', 'receiveAmount'])('reports malformed %s without throwing from Big', (field) => {
+    expect(claimSchema.safeParse({ ...claim, amount: '1', fee: '0.1', receiveAmount: '0.9', [field]: 'invalid' }).success).toBe(false);
   });
 });
